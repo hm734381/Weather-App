@@ -1,0 +1,30 @@
+version: '3'
+services:
+  app:
+    build: ./app  # Replace with your actual build context
+    ports:
+      - "8000:8000"
+    networks:
+      - weather-microservice_default  # Ensure both services are using the same network
+    depends_on:
+      - postgresdb  # Ensure app depends on postgresdb
+
+  postgresdb:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: weather_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - weather-microservice_default  # Ensure both services are using the same network
+
+volumes:
+  pgdata: {}
+
+networks:
+  weather-microservice_default:  # Define the network
+    driver: bridge
