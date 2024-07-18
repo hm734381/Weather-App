@@ -3,7 +3,19 @@ from database import WeatherData, save_weather_data, get_weather_data, delete_we
 from typing import Optional
 from pydantic import BaseModel
 import requests
+from starlette.middleware.cors import CORSMiddleware
 
+app = FastAPI()
+
+origins = ["http://localhost:3000", "http://0.0.0.0:3000"]  
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
 
 #Weather API Integration
 API_KEY = '4d397e3ecffad1653b7c7f5fb2b2f1d3'
@@ -18,7 +30,7 @@ def fetch_weather_data(lon, lat, exclude="minutely,hourly"):
 #Initialize database
 init_database()
 
-app = FastAPI()
+
 
 def get_db():
     db = SessionLocal()
@@ -58,7 +70,17 @@ def fetch_and_store_weather(data:WeatherRequest, db:SessionLocal() = Depends(get
     Result = save_weather_data(db, weather_data_db)
     
     if Result:
-       return {"message": "Weather data stored successfully"}
+        weather_response = WeatherResposne(
+            latitude=weather_data_db.latitude,
+            longitude=weather_data_db.longitude,
+            temperature=weather_data_db.temperature,
+            humidity=weather_data_db.humidity,
+            weather_description=weather_data_db.weather_description
+        )
+        return {
+            "message": "Weather data stored successfully",
+            "weather_data": weather_response.dict()
+        }
     raise HTTPException(status_code=400, detail='Weather data already exists')
 
 @app.get('/get_weather', response_model=WeatherResposne)
@@ -87,3 +109,4 @@ def delete_weather(lon: float, lat: float, db:SessionLocal() = Depends(get_db)):
     else:
         return ('Succesfully deleted')
 
+ 
