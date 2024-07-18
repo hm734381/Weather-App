@@ -56,9 +56,13 @@ class WeatherResposne(BaseModel):
 
 @app.post('/weather/')
 def fetch_and_store_weather(data:WeatherRequest, db:SessionLocal() = Depends(get_db)):
+    existing_data = get_weather_data(db, data.lon, data.lat)
+    if existing_data:
+        raise HTTPException(status_code=400, detail='Weather data already exists')
+    
     weather_api_data = fetch_weather_data(data.lat, data.lon)
     if not weather_api_data or "main" not in weather_api_data or "weather" not in weather_api_data:
-        raise HTTPException(status_code=404, detail='Weather data not found')
+        raise HTTPException(status_code=404, detail='Trouble fetching weather Data')
 
     weather_data_db = WeatherData(
         latitude=data.lat,
@@ -81,13 +85,14 @@ def fetch_and_store_weather(data:WeatherRequest, db:SessionLocal() = Depends(get
             "message": "Weather data stored successfully",
             "weather_data": weather_response.dict()
         }
-    raise HTTPException(status_code=400, detail='Weather data already exists')
+    
+
 
 @app.get('/get_weather', response_model=WeatherResposne)
 def get_weather(lon: float, lat: float, db: SessionLocal() = Depends(get_db)):
     stored_weather_data = get_weather_data(db, lon, lat)
     if stored_weather_data is None:
-        raise HTTPException(status_code=404, detail="Weather data not found")
+        raise HTTPException(status_code=404, detail="Weather data was not found")
     
 
     weather_response = WeatherResposne(
@@ -100,6 +105,8 @@ def get_weather(lon: float, lat: float, db: SessionLocal() = Depends(get_db)):
     
     
     return weather_response.dict()
+
+
 
 @app.delete('/delete_weather')
 def delete_weather(lon: float, lat: float, db:SessionLocal() = Depends(get_db)):
