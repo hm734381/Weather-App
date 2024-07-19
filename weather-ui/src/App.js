@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios'; 
 import TopBar from './TopBar';
 import WeatherDisplay from './WeatherDisplay';
+import './index.css';
+import KeycloakService from './KeycloakService';
 
 
 const FETCH_AND_STORE_URL = 'http://0.0.0.0:8000/weather/';
@@ -12,7 +14,15 @@ function App() {
   const [weatherData, setWeatherData] = useState(null);
   const [errorMessage, setErrorMessage]  = useState(null);
   const [infoMessage, setInfoMessage] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      KeycloakService.initKeycloak(() => {
+        setIsAuthenticated(true);
+      });
+    }
+  }, [isAuthenticated]);
 
   const resetfields = () => {
     setErrorMessage(null);
@@ -60,19 +70,25 @@ function App() {
     }
   };
 
+
+
+
+  if (!isAuthenticated) {
+    return <div>Login Required</div>;  // Display login required message
+  }
+  else {
   return (
-    <div className="App">
+    <div className="App min-h-screen bg-gray-100 py-8 px-4">
       <TopBar
         onFetchAndStore={handleFetchAndStore}
         onGetWeather={handleGetWeather}
         onDeleteWeather={handleDeleteWeather}
       />
       {weatherData && <WeatherDisplay weatherData={weatherData} />}
-      {errorMessage&& <p className='error-message'>{errorMessage}</p>}
-      {infoMessage && <p className= "info-message">{infoMessage}</p>}
-
+      {errorMessage&& <p className='error-message text-red-500'>{errorMessage}</p>}
+      {infoMessage && <p className="info-message text-green-500">{infoMessage}</p>}
     </div>
-  );
+  ); };
 }
 
 

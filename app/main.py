@@ -4,6 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 import requests
 from starlette.middleware.cors import CORSMiddleware
+from fastapi_keycloak import FastAPIKeycloak
+
 
 app = FastAPI()
 
@@ -16,6 +18,17 @@ app.add_middleware(
     allow_methods=["*"],  
     allow_headers=["*"],  
 )
+
+keycloak = FastAPIKeycloak(
+    server_url="http://localhost:8080/auth/",
+    client_id="fastapi-backend",
+    client_secret="Vheu3D9tjTW4cZXZHIJ1EvSxN3eougJY",
+    realm="Weather-MICROSERVICE",
+    callback_uri="http://localhost:8000/callback"
+)
+
+app.add_middleware(keycloak.middleware)
+
 
 #Weather API Integration
 API_KEY = '4d397e3ecffad1653b7c7f5fb2b2f1d3'
