@@ -29,16 +29,7 @@ class WeatherData(Base):
     weather_description = Column(String)
 
 
-def save_weather_data(db, weather_data: WeatherData):
-    existing_data = db.query(WeatherData).filter(
-        WeatherData.latitude == weather_data.latitude,
-        WeatherData.longitude == weather_data.longitude
-    ).first()
-    
-    if existing_data:
-        logger.info(f"Weather data already exists for lat={weather_data.latitude}, lon={weather_data.longitude}")
-        return False
-    
+def save_weather_data(db, weather_data: WeatherData):    
     try:
         db.add(weather_data)
         db.commit()
